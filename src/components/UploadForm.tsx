@@ -309,25 +309,31 @@ const UploadForm: React.FC<Props> = ({
               />
             </div>
           </div>
-          <div className="flex gap-3 p-3 justify-end">
-            <Button
-              variant="default"
-              className="flex-1 bg-secondary border border-primary text-primary rounded-full text-xs"
-              onClick={() => {
-                setFileName(null);
-                onPreview(null);
-              }}
-            >
-              REMOVE
-            </Button>
-            <Button
-              variant="default"
-              className="flex-1 bg-primary border border-secondary text-secondary rounded-full text-xs"
-              onClick={analyzeMock}
-              disabled={!canAnalyze}
-            >
-              {loading ? "Analyzing..." : "ANALYZE"}
-            </Button>
+          <div className="flex justify-between">
+            <div className="p-4 text-xs text-primary/60 items-center">
+              Accuracy may vary based on image quality and lighting, ensure
+              quality input for best results.
+            </div>
+            <div className="flex gap-3 p-3 justify-end">
+              <Button
+                variant="default"
+                className="flex-1 bg-secondary border border-primary text-primary rounded-full text-xs"
+                onClick={() => {
+                  setFileName(null);
+                  onPreview(null);
+                }}
+              >
+                REMOVE
+              </Button>
+              <Button
+                variant="default"
+                className="flex-1 bg-primary border border-secondary text-secondary rounded-full text-xs"
+                onClick={analyzeMock}
+                disabled={!canAnalyze}
+              >
+                {loading ? "Analyzing..." : "ANALYZE"}
+              </Button>
+            </div>
           </div>
         </div>
       ) : (

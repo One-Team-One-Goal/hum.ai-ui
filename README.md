@@ -3,6 +3,7 @@
 A web-based tool for automated rice quality grading using Convolutional Neural Networks (CNN) and Near-Infrared (NIR) imaging, aligned with Philippine National Standards for Grains (PNS/BAFS-290:2019).
 
 ## Features
+
 - Upload rice grain images (RGB + NIR)
 - Live camera capture and device selection
 - Automated grading using mock CNN model output
@@ -11,12 +12,14 @@ A web-based tool for automated rice quality grading using Convolutional Neural N
 - Exportable JSON reports
 
 ## Technologies
+
 - React + Vite
 - Tailwind CSS
 - Recharts (Radar chart visualization)
 - TypeScript
 
 ## Usage
+
 1. Clone the repository
 2. Install dependencies: `npm install`
 3. Start the dev server: `npm run dev`
@@ -24,7 +27,9 @@ A web-based tool for automated rice quality grading using Convolutional Neural N
 5. View grading results and export reports
 
 ## Project Description (for GitHub)
+
 Automated rice grading web app using CNN and NIR imaging, designed for Philippine rice standards (PNS/BAFS-290:2019). Upload or capture rice images, get instant grading, and visualize results with radar charts.
 
 ## License
+
 MIT
