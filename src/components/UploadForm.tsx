@@ -257,20 +257,22 @@ const UploadForm: React.FC<Props> = ({
             onInput={handleFile}
           />
           <div className="flex flex-col bg-secondary-foreground rounded-xl min-h-111 h-full">
-            <div className="border-b border-primary-foreground/30 w-full text-secondary p-3 px-4 font-semibold text-xs flex items-center gap-2 justify-between">
-              <div className="flex gap-4 items-center">
-                <div>
-                  <span className="pr-1">DEVICE INPUT: </span>
+            <div className="border-b border-primary-foreground/30 w-full text-secondary p-2 sm:p-3 px-3 sm:px-4 font-semibold text-[10px] sm:text-xs flex flex-col md:flex-row items-start md:items-center gap-1.5 sm:gap-2 justify-between">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-4 items-start md:items-center w-full md:w-auto">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <span className="pr-0.5 sm:pr-1 whitespace-nowrap text-[9px] sm:text-xs">
+                    DEVICE:{" "}
+                  </span>
                   {cameraEnabled ? (
                     <select
                       value={selectedDevice}
                       onChange={(e) =>
                         setSelectedDevice((e.target as HTMLSelectElement).value)
                       }
-                      className="bg-primary text-secondary px-2 py-1 rounded-xl text-xs font-medium border border-secondary cursor-pointer max-w-26"
+                      className="bg-primary text-secondary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl text-[10px] sm:text-xs font-medium border border-secondary cursor-pointer max-w-[100px] sm:max-w-[150px]"
                     >
                       {devices.length === 0 ? (
-                        <option value="">No cameras found</option>
+                        <option value="">No cameras</option>
                       ) : (
                         devices.map((device) => (
                           <option key={device.deviceId} value={device.deviceId}>
@@ -283,23 +285,25 @@ const UploadForm: React.FC<Props> = ({
                     <button
                       type="button"
                       onClick={enableCamera}
-                      className="bg-primary text-secondary px-2 py-1 rounded-xl text-xs font-medium border border-secondary cursor-pointer hover:bg-primary/80"
+                      className="bg-primary text-secondary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl text-[10px] sm:text-xs font-medium border border-secondary cursor-pointer hover:bg-primary/80 whitespace-nowrap"
                     >
-                      Enable Camera
+                      Enable
                     </button>
                   )}
                 </div>
-                <div>
-                  <span className="pr-1">UPLOAD: </span>
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <span className="pr-0.5 sm:pr-1 whitespace-nowrap text-[9px] sm:text-xs">
+                    UPLOAD:{" "}
+                  </span>
                   <label
                     htmlFor="file-upload"
-                    className="bg-primary text-secondary px-2 py-1 rounded-xl text-xs font-medium border border-secondary cursor-pointer hover:bg-primary/80"
+                    className="bg-primary text-secondary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl text-[10px] sm:text-xs font-medium border border-secondary cursor-pointer hover:bg-primary/80 whitespace-nowrap"
                   >
-                    Choose File
+                    Choose
                   </label>
                 </div>
               </div>
-              <div className="text-secondary/50 font-normal text-center">
+              <div className="text-secondary/50 font-normal w-full md:w-auto truncate text-[9px] sm:text-xs">
                 {fileName ?? "Image loaded"}
               </div>
             </div>
@@ -312,15 +316,14 @@ const UploadForm: React.FC<Props> = ({
               />
             </div>
           </div>
-          <div className="flex justify-between">
-            <div className="p-4 text-xs text-primary/60 items-center">
-              Accuracy may vary based on image quality and lighting, ensure
-              quality input for best results.
+          <div className="flex flex-col sm:flex-row sm:justify-between gap-2 p-3">
+            <div className="text-[10px] sm:text-xs text-primary/60 px-1">
+              Accuracy may vary based on image quality and lighting.
             </div>
-            <div className="flex gap-3 p-3 justify-end">
+            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
               <Button
                 variant="default"
-                className="flex-1 bg-secondary border border-primary text-primary rounded-full text-xs"
+                className="flex-1 sm:flex-none bg-secondary border border-primary text-primary rounded-full text-[10px] sm:text-xs px-3 py-1.5"
                 onClick={() => {
                   setFileName(null);
                   setSelectedFile(null);
@@ -333,7 +336,7 @@ const UploadForm: React.FC<Props> = ({
               </Button>
               <Button
                 variant="default"
-                className="flex-1 bg-primary border border-secondary text-secondary rounded-full text-xs"
+                className="flex-1 sm:flex-none bg-primary border border-secondary text-secondary rounded-full text-[10px] sm:text-xs px-3 py-1.5"
                 onClick={handleAnalyze}
                 disabled={!canAnalyze}
               >
@@ -372,10 +375,12 @@ const UploadForm: React.FC<Props> = ({
                 onInput={handleFile}
               />
               <div className="flex flex-col bg-secondary-foreground rounded-xl min-h-111 h-full">
-                <div className="border-b border-primary-foreground/30 w-full text-secondary p-3 px-4 font-semibold text-xs flex items-center gap-2 justify-between">
-                  <div className="flex gap-4 items-center">
-                    <div>
-                      <span className="pr-1">DEVICE INPUT: </span>
+                <div className="border-b border-primary-foreground/30 w-full text-secondary p-2 sm:p-3 px-3 sm:px-4 font-semibold text-[10px] sm:text-xs flex flex-col md:flex-row items-start md:items-center gap-1.5 sm:gap-2 justify-between">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-4 items-start md:items-center w-full md:w-auto">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <span className="pr-0.5 sm:pr-1 whitespace-nowrap text-[9px] sm:text-xs">
+                        DEVICE:{" "}
+                      </span>
                       {cameraEnabled ? (
                         <select
                           value={selectedDevice}
@@ -384,10 +389,10 @@ const UploadForm: React.FC<Props> = ({
                               (e.target as HTMLSelectElement).value
                             )
                           }
-                          className="bg-primary text-secondary px-2 py-1 rounded-xl text-xs font-medium border border-secondary cursor-pointer max-w-26"
+                          className="bg-primary text-secondary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl text-[10px] sm:text-xs font-medium border border-secondary cursor-pointer max-w-[100px] sm:max-w-[150px]"
                         >
                           {devices.length === 0 ? (
-                            <option value="">No cameras found</option>
+                            <option value="">No cameras</option>
                           ) : (
                             devices.map((device) => (
                               <option
@@ -403,23 +408,25 @@ const UploadForm: React.FC<Props> = ({
                         <button
                           type="button"
                           onClick={enableCamera}
-                          className="bg-primary text-secondary px-2 py-1 rounded-xl text-xs font-medium border border-secondary cursor-pointer hover:bg-primary/80"
+                          className="bg-primary text-secondary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl text-[10px] sm:text-xs font-medium border border-secondary cursor-pointer hover:bg-primary/80 whitespace-nowrap"
                         >
-                          Enable Camera
+                          Enable
                         </button>
                       )}
                     </div>
-                    <div>
-                      <span className="pr-1">UPLOAD: </span>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <span className="pr-0.5 sm:pr-1 whitespace-nowrap text-[9px] sm:text-xs">
+                        UPLOAD:{" "}
+                      </span>
                       <label
                         htmlFor="file-upload"
-                        className="bg-primary text-secondary px-2 py-1 rounded-xl text-xs font-medium border border-secondary cursor-pointer hover:bg-primary/80"
+                        className="bg-primary text-secondary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl text-[10px] sm:text-xs font-medium border border-secondary cursor-pointer hover:bg-primary/80 whitespace-nowrap"
                       >
-                        Choose File
+                        Choose
                       </label>
                     </div>
                   </div>
-                  <div className="text-secondary/50 font-normal text-center">
+                  <div className="text-secondary/50 font-normal w-full md:w-auto truncate text-[9px] sm:text-xs">
                     {fileName ?? "No file selected"}
                   </div>
                 </div>
@@ -477,21 +484,20 @@ const UploadForm: React.FC<Props> = ({
               </div>
             </div>
           </div>
-          <div className="flex justify-between">
-            <div className="p-4 text-xs text-primary/60 items-center">
-              Accuracy may vary based on image quality and lighting, ensure
-              quality input for best results.
+          <div className="flex flex-col sm:flex-row sm:justify-between gap-2 p-3">
+            <div className="text-[10px] sm:text-xs text-primary/60 px-1">
+              Accuracy may vary based on image quality and lighting.
             </div>
-            <div className="flex gap-3 p-3 justify-end">
+            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
               <Button
                 variant="default"
-                className="flex-1 bg-secondary border border-primary text-primary rounded-full text-xs"
+                className="flex-1 sm:flex-none bg-secondary border border-primary text-primary rounded-full text-[10px] sm:text-xs px-3 py-1.5"
               >
                 <label htmlFor="file-upload">UPLOAD</label>
               </Button>
               <Button
                 variant="default"
-                className="flex-1 bg-primary border border-secondary text-secondary rounded-full text-xs"
+                className="flex-1 sm:flex-none bg-primary border border-secondary text-secondary rounded-full text-[10px] sm:text-xs px-3 py-1.5"
                 onClick={handleAnalyze}
                 disabled={!canAnalyze}
               >

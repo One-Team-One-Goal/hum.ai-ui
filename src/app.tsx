@@ -18,8 +18,8 @@ export function App() {
   };
 
   return (
-    <div className="text-slate-900 w-full h-full">
-      <div className="w-1/2 mx-auto">
+    <div className="text-slate-900 h-full w-full overflow-x-hidden">
+      <div className="w-full max-w-full md:w-1/2 mx-auto px-3 md:px-0 box-border">
         <div className="flex flex-col justify-between my-8">
           <div className="space-y-8">
             <Header />

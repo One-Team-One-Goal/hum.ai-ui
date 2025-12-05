@@ -126,18 +126,22 @@ const ResultCard: React.FC<Props> = ({ result }) => {
 
   return (
     <Card className="w-full overflow-hidden border-border shadow-sm mt-8">
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-1">
-              PNS/BAFS 290:2019 Classification
+      <CardHeader className="pb-2 px-3 sm:px-6">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[8px] sm:text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-1">
+              PNS/BAFS 290:2019
             </p>
-            <h2 className={`text-2xl font-bold tracking-tight ${gradeColor}`}>
+            <h2
+              className={`text-xl sm:text-2xl font-bold tracking-tight ${gradeColor}`}
+            >
               {result.grade}
             </h2>
           </div>
-          <div className={`px-3 py-1 rounded-xl border ${gradeBg}`}>
-            <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">
+          <div
+            className={`px-2 sm:px-3 py-1 rounded-xl border shrink-0 ${gradeBg}`}
+          >
+            <p className="text-[8px] sm:text-[9px] font-medium text-muted-foreground uppercase tracking-wider">
               {new Date(result.timestamp).toLocaleDateString("en-US", {
                 month: "short",
                 day: "2-digit",
@@ -148,37 +152,39 @@ const ResultCard: React.FC<Props> = ({ result }) => {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4 pt-0">
+      <CardContent className="space-y-4 pt-0 px-3 sm:px-6">
         {/* Metrics Display with Chart */}
-        <div className="flex gap-4">
+        <div className="flex flex-col md:flex-row gap-4">
           {/* Left: Metric Values */}
-          <div className="shrink-0 w-40 space-y-3 pt-4 items-center my-auto">
-            {chartData.map((metric, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">
-                  {metric.name}:
-                </span>
-                <span
-                  className="text-sm font-semibold"
-                  style={{ color: metric.fill }}
-                >
-                  {metric.value.toFixed(1)}%
-                </span>
-              </div>
-            ))}
+          <div className="shrink-0 w-full md:w-40 space-y-3 pt-2 sm:pt-4 items-center my-auto">
+            <div className="grid grid-cols-2 md:grid-cols-1 gap-x-4 gap-y-2 sm:gap-y-3">
+              {chartData.map((metric, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">
+                    {metric.name}:
+                  </span>
+                  <span
+                    className="text-xs sm:text-sm font-semibold"
+                    style={{ color: metric.fill }}
+                  >
+                    {metric.value.toFixed(1)}%
+                  </span>
+                </div>
+              ))}
+            </div>
 
             {/* Divider */}
             {additionalStats.length > 0 && (
-              <div className="border-t border-border/40 my-2 pt-2 space-y-2">
+              <div className="border-t border-border/40 my-2 pt-2 space-y-1 sm:space-y-2 grid grid-cols-2 md:grid-cols-1 gap-x-4 md:gap-x-0">
                 {additionalStats.map((stat, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between py-0.5"
                   >
-                    <span className="text-xs font-medium text-muted-foreground">
+                    <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">
                       {stat.label}:
                     </span>
-                    <span className="text-sm font-semibold text-foreground/80">
+                    <span className="text-xs sm:text-sm font-semibold text-foreground/80">
                       {stat.value}
                     </span>
                   </div>
@@ -188,13 +194,13 @@ const ResultCard: React.FC<Props> = ({ result }) => {
           </div>
 
           {/* Right: Radar Chart */}
-          <div className="flex-1">
-            <ResponsiveContainer width="100%" height={340}>
+          <div className="flex-1 h-[200px] sm:h-[250px] md:h-[340px]">
+            <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={chartData}>
                 <PolarGrid stroke="#e5e7eb" strokeWidth={1.5} />
                 <PolarAngleAxis
                   dataKey="name"
-                  tick={{ fontSize: 11, fill: "#6b7280", fontWeight: 500 }}
+                  tick={{ fontSize: 9, fill: "#6b7280", fontWeight: 500 }}
                 />
                 <PolarRadiusAxis
                   angle={90}
@@ -232,11 +238,11 @@ const ResultCard: React.FC<Props> = ({ result }) => {
         </div>
 
         {/* Standard Compliance */}
-        <div className="mt-4 p-3 bg-muted/30 rounded-lg border border-border/40">
-          <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+        <div className="mt-4 p-2 sm:p-3 bg-muted/30 rounded-lg border border-border/40">
+          <p className="text-[8px] sm:text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
             Analysis Summary
           </p>
-          <p className="text-xs text-foreground/80 leading-relaxed">
+          <p className="text-[10px] sm:text-xs text-foreground/80 leading-relaxed">
             {result.notes ||
               `Analyzed ${result.totalGrains || "N/A"} grains. ${
                 result.foreignObjects
@@ -248,15 +254,15 @@ const ResultCard: React.FC<Props> = ({ result }) => {
 
         {/* AI Model Info */}
         {result.modelVersion && (
-          <div className="flex items-center justify-between text-[9px] text-muted-foreground/60 pt-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-[8px] sm:text-[9px] text-muted-foreground/60 pt-1 gap-0.5">
             <span>Model: {result.modelVersion}</span>
             <span>Confidence: {result.confidence || "N/A"}%</span>
           </div>
         )}
       </CardContent>
 
-      <CardFooter className="bg-muted/20 border-t border-border/40 flex justify-between items-center py-3">
-        <span className="text-[9px] text-muted-foreground/60 font-mono tracking-wider">
+      <CardFooter className="bg-muted/20 border-t border-border/40 flex flex-col sm:flex-row justify-between items-start sm:items-center py-2 sm:py-3 px-3 sm:px-6 gap-2">
+        <span className="text-[8px] sm:text-[9px] text-muted-foreground/60 font-mono tracking-wider">
           REPORT ID:{" "}
           {result.timestamp
             ? new Date(result.timestamp).getTime().toString().slice(-8)
@@ -264,7 +270,7 @@ const ResultCard: React.FC<Props> = ({ result }) => {
         </span>
         <button
           onClick={exportJSON}
-          className="text-[9px] font-semibold text-foreground/70 hover:text-foreground transition-colors uppercase tracking-widest px-3 py-1.5 rounded hover:bg-background/50"
+          className="text-[8px] sm:text-[9px] font-semibold text-foreground/70 hover:text-foreground transition-colors uppercase tracking-widest px-2 sm:px-3 py-1 sm:py-1.5 rounded hover:bg-background/50"
         >
           Export JSON
         </button>
