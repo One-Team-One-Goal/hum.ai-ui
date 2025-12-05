@@ -47,21 +47,21 @@ const ResultCard: React.FC<Props> = ({ result }) => {
     );
   }
 
-  const gradeColor =
-    {
-      Premium: "text-emerald-600",
-      "Grade 1": "text-blue-600",
-      "Grade 2": "text-amber-600",
-      Substandard: "text-rose-600",
-    }[result.grade] || "text-foreground";
+  const gradeColorMap: Record<string, string> = {
+    Premium: "text-emerald-600",
+    "Grade 1": "text-blue-600",
+    "Grade 2": "text-amber-600",
+    Substandard: "text-rose-600",
+  };
+  const gradeColor = gradeColorMap[result.grade] || "text-foreground";
 
-  const gradeBg =
-    {
-      Premium: "bg-emerald-50 border-emerald-200",
-      "Grade 1": "bg-blue-50 border-blue-200",
-      "Grade 2": "bg-amber-50 border-amber-200",
-      Substandard: "bg-rose-50 border-rose-200",
-    }[result.grade] || "bg-muted border-border";
+  const gradeBgMap: Record<string, string> = {
+    Premium: "bg-emerald-50 border-emerald-200",
+    "Grade 1": "bg-blue-50 border-blue-200",
+    "Grade 2": "bg-amber-50 border-amber-200",
+    Substandard: "bg-rose-50 border-rose-200",
+  };
+  const gradeBg = gradeBgMap[result.grade] || "bg-muted border-border";
 
   // Prepare chart data for recharts - adapt to backend response format
   // Backend returns: headRicePercent, brokenPercent, discoloredPercent, foreignObjects, totalGrains, counts

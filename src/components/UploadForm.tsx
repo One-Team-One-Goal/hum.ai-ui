@@ -33,30 +33,8 @@ const UploadForm: React.FC<Props> = ({
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    async function getDevices() {
-      try {
-        // Request permission to access camera to get device labels
-        await navigator.mediaDevices.getUserMedia({ video: true });
-        const allDevices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = allDevices
-          .filter((device) => device.kind === "videoinput")
-          .map((device, index) => ({
-            deviceId: device.deviceId,
-            label: device.label || `Camera ${index + 1}`,
-          }));
-        setDevices(videoDevices);
-        if (videoDevices.length > 0 && !selectedDevice) {
-          setSelectedDevice(videoDevices[0].deviceId);
-        }
-        setCameraEnabled(true);
-      } catch (err) {
-        console.error("Error accessing camera devices:", err);
-        setCameraEnabled(false);
-      }
-    }
-    if (cameraEnabled === false && devices.length === 0) {
-      // Don't auto-request on mount, wait for user action
-    }
+    // Camera device enumeration is handled in enableCamera function
+    // This effect is kept for potential future use
   }, [cameraEnabled]);
 
   // Handle video stream when camera is enabled or device changes
