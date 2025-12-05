@@ -30,6 +30,7 @@ export function App() {
                 setResult(null);
               }}
               onAnalyze={handleAnalyze}
+              annotations={result?.annotations}
             />
           </div>
           <div ref={resultRef}>

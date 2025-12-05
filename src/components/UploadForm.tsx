@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "./Button";
 import { GridLoader } from "react-spinners";
-import { analyzeImage } from "../lib/api";
+import { analyzeImage, getAnnotatedImage } from "../lib/api";
+import type { Detection, AnnotatedImageResult } from "../lib/api";
 
 interface Props {
   preview?: string | null;
   onPreview: (src: string | null) => void;
   onAnalyze: (result: any) => void;
+  annotations?: AnnotatedImageResult | null;
 }
 
 interface MediaDeviceInfo {
@@ -14,10 +16,22 @@ interface MediaDeviceInfo {
   label: string;
 }
 
+// Color mapping for each grain category (matching ResultCard)
+const labelColors: Record<string, string> = {
+  Whole: "#10b981",      // Emerald green - good quality
+  Clean: "#22c55e",      // Green - good quality
+  Broken: "#f59e0b",     // Amber - moderate issue
+  Chalky: "#8b5cf6",     // Purple - quality issue
+  Immature: "#06b6d4",   // Cyan - developmental issue
+  Discolored: "#ef4444", // Red - damaged
+  "Foreign Object": "#64748b", // Slate gray - foreign matter
+};
+
 const UploadForm: React.FC<Props> = ({
   preview = null,
   onPreview,
   onAnalyze,
+  annotations = null,
 }) => {
   const [fileName, setFileName] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -29,8 +43,11 @@ const UploadForm: React.FC<Props> = ({
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [hoveredBox, setHoveredBox] = useState<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     // Camera device enumeration is handled in enableCamera function
@@ -83,6 +100,14 @@ const UploadForm: React.FC<Props> = ({
       setCameraEnabled(false);
     }
   }, [preview, stream]);
+
+  // State to trigger re-render when image dimensions are available
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Reset imageLoaded when preview changes
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [preview]);
 
   // Capture frame from video
   function captureFrame() {
@@ -206,26 +231,31 @@ const UploadForm: React.FC<Props> = ({
     setError(null);
 
     try {
-      let result;
-      if (capturedDataUrl) {
-        // Camera capture - send as data URL
-        result = await analyzeImage(
-          capturedDataUrl,
-          fileName || "camera-capture.png"
-        );
-      } else if (selectedFile) {
-        // File upload
-        result = await analyzeImage(selectedFile, fileName || "image.png");
-      } else {
+      const imageInput = capturedDataUrl || selectedFile;
+      const imageName = fileName || (capturedDataUrl ? "camera-capture.png" : "image.png");
+
+      if (!imageInput) {
         throw new Error("No image selected");
       }
 
+      // Call both APIs in parallel for better performance
+      const [analysisResult, annotationsResult] = await Promise.all([
+        analyzeImage(imageInput, imageName),
+        getAnnotatedImage(imageInput, imageName),
+      ]);
+
       // Add timestamp if not present
-      if (!result.timestamp) {
-        result.timestamp = new Date().toISOString();
+      if (!analysisResult.timestamp) {
+        analysisResult.timestamp = new Date().toISOString();
       }
 
-      onAnalyze(result);
+      // Merge annotated image data into result
+      const resultWithAnnotations = {
+        ...analysisResult,
+        annotations: annotationsResult,
+      };
+
+      onAnalyze(resultWithAnnotations);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Analysis failed";
       setError(message);
@@ -308,12 +338,89 @@ const UploadForm: React.FC<Props> = ({
               </div>
             </div>
             <div className="flex-1 flex items-center justify-center p-2 overflow-hidden">
-              <img
-                src={preview}
-                alt="Preview"
-                className="h-full w-4/5 object-cover rounded-lg"
+              <div 
+                ref={imageContainerRef}
+                className="relative h-full w-4/5"
                 style={{ maxHeight: "100%", maxWidth: "100%" }}
-              />
+              >
+                <img
+                  ref={imageRef}
+                  src={preview}
+                  alt="Preview"
+                  className="h-full w-full object-contain rounded-lg"
+                  style={{ maxHeight: "100%", maxWidth: "100%" }}
+                  onLoad={() => setImageLoaded(true)}
+                />
+                {/* Bounding box overlay */}
+                {annotations && annotations.detections && imageLoaded && imageRef.current && (
+                  <div 
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      // Match the actual rendered image dimensions
+                      width: imageRef.current.offsetWidth,
+                      height: imageRef.current.offsetHeight,
+                      left: '50%',
+                      top: '50%',
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  >
+                    {annotations.detections.map((detection: Detection, index: number) => {
+                      const imgElement = imageRef.current;
+                      if (!imgElement) return null;
+                      
+                      // Calculate scale factors
+                      const scaleX = imgElement.offsetWidth / annotations.imageWidth;
+                      const scaleY = imgElement.offsetHeight / annotations.imageHeight;
+                      
+                      // Scale bounding box coordinates (using bbox object from backend)
+                      const left = detection.bbox.x * scaleX;
+                      const top = detection.bbox.y * scaleY;
+                      const width = detection.bbox.width * scaleX;
+                      const height = detection.bbox.height * scaleY;
+                      
+                      const color = labelColors[detection.label] || "#6b7280";
+                      const isHovered = hoveredBox === index;
+                      
+                      return (
+                        <div
+                          key={detection.id}
+                          className="absolute pointer-events-auto cursor-pointer transition-all duration-150"
+                          style={{
+                            left: `${left}px`,
+                            top: `${top}px`,
+                            width: `${width}px`,
+                            height: `${height}px`,
+                            border: `2px solid ${color}`,
+                            backgroundColor: isHovered ? `${color}33` : 'transparent',
+                            boxShadow: isHovered ? `0 0 8px ${color}` : 'none',
+                          }}
+                          onMouseEnter={() => setHoveredBox(index)}
+                          onMouseLeave={() => setHoveredBox(null)}
+                        >
+                          {/* Label tooltip at top of box */}
+                          {isHovered && (
+                            <div
+                              className="absolute left-1/2 -translate-x-1/2 px-2 py-1 rounded text-[10px] font-semibold whitespace-nowrap z-10"
+                              style={{
+                                bottom: '100%',
+                                marginBottom: '4px',
+                                backgroundColor: color,
+                                color: '#fff',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                              }}
+                            >
+                              {detection.label}
+                              <span className="ml-1 opacity-80">
+                                ({(detection.confidence * 100).toFixed(0)}%)
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row sm:justify-between gap-2 p-3">

@@ -68,6 +68,64 @@ export async function analyzeImage(
 }
 
 /**
+ * Interface for annotated image detection results
+ */
+export interface Detection {
+  id: number;
+  label: string;
+  confidence: number;
+  bbox: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    x2: number;
+    y2: number;
+  };
+}
+
+export interface AnnotatedImageResult {
+  imageWidth: number;
+  imageHeight: number;
+  totalDetections: number;
+  detections: Detection[];
+  timestamp?: string;
+  filename?: string;
+}
+
+/**
+ * Get annotated image with bounding box coordinates for detected grains.
+ * Accepts either a File object or a data URL string (for camera captures).
+ */
+export async function getAnnotatedImage(
+  imageInput: File | string,
+  filename: string = "image.png"
+): Promise<AnnotatedImageResult> {
+  const formData = new FormData();
+
+  if (typeof imageInput === "string") {
+    // It's a data URL from camera capture
+    const file = dataURLtoFile(imageInput, filename);
+    formData.append("image", file);
+  } else {
+    // It's already a File object
+    formData.append("image", imageInput);
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/analyze/physical/annotated`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Server error: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
  * Check if the backend API is healthy
  */
 export async function checkHealth(): Promise<boolean> {
