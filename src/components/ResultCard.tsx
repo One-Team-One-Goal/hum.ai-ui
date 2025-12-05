@@ -33,6 +33,20 @@ const ResultCard: React.FC<Props> = ({ result }) => {
     return null;
   }
 
+  // Handle error response from backend
+  if (result.error) {
+    return (
+      <Card className="w-full overflow-hidden border-border shadow-sm mt-8">
+        <CardContent className="p-6">
+          <div className="text-center text-rose-600">
+            <p className="font-semibold">Analysis Error</p>
+            <p className="text-sm mt-2">{result.error}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const gradeColor =
     {
       Premium: "text-emerald-600",
@@ -49,7 +63,8 @@ const ResultCard: React.FC<Props> = ({ result }) => {
       Substandard: "bg-rose-50 border-rose-200",
     }[result.grade] || "bg-muted border-border";
 
-  // Prepare chart data for recharts - always show all 6 metrics
+  // Prepare chart data for recharts - adapt to backend response format
+  // Backend returns: headRicePercent, brokenPercent, discoloredPercent, foreignObjects, totalGrains, counts
   const chartData = [
     {
       name: "Head Rice",
@@ -62,26 +77,52 @@ const ResultCard: React.FC<Props> = ({ result }) => {
       fill: "#f59e0b",
     },
     {
-      name: "Chalkiness",
-      value: parseFloat(result.chalkinessPercent || "0"),
-      fill: "#f43f5e",
-    },
-    {
-      name: "Damaged",
-      value: parseFloat(result.damagedPercent || "0"),
-      fill: "#64748b",
-    },
-    {
       name: "Discolored",
       value: parseFloat(result.discoloredPercent || "0"),
       fill: "#a8a29e",
     },
-    {
-      name: "Moisture",
-      value: parseFloat(result.moisture || "0"),
-      fill: "#3b82f6",
-    },
+    // Only show these if present (from mock data or future backend updates)
+    ...(result.chalkinessPercent
+      ? [
+          {
+            name: "Chalkiness",
+            value: parseFloat(result.chalkinessPercent || "0"),
+            fill: "#f43f5e",
+          },
+        ]
+      : []),
+    ...(result.damagedPercent
+      ? [
+          {
+            name: "Damaged",
+            value: parseFloat(result.damagedPercent || "0"),
+            fill: "#64748b",
+          },
+        ]
+      : []),
+    ...(result.moisture
+      ? [
+          {
+            name: "Moisture",
+            value: parseFloat(result.moisture || "0"),
+            fill: "#3b82f6",
+          },
+        ]
+      : []),
   ];
+
+  // Calculate foreign object percentage if we have total grains
+  const foreignPct =
+    result.totalGrains && result.foreignObjects
+      ? ((result.foreignObjects / result.totalGrains) * 100).toFixed(1)
+      : null;
+
+  // Additional stats for display
+  const additionalStats = [
+    { label: "Total Grains", value: result.totalGrains },
+    { label: "Foreign Objects", value: result.foreignObjects },
+    ...(foreignPct ? [{ label: "Foreign %", value: `${foreignPct}%` }] : []),
+  ].filter((stat) => stat.value !== undefined && stat.value !== null);
 
   return (
     <Card className="w-full overflow-hidden border-border shadow-sm mt-8">
@@ -107,11 +148,11 @@ const ResultCard: React.FC<Props> = ({ result }) => {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4 pt-2">
+      <CardContent className="space-y-4 pt-0">
         {/* Metrics Display with Chart */}
-        <div className="mt-2 flex gap-4">
+        <div className="flex gap-4">
           {/* Left: Metric Values */}
-          <div className="flex-shrink-0 w-40 space-y-3 pt-4 items-center my-auto">
+          <div className="shrink-0 w-40 space-y-3 pt-4 items-center my-auto">
             {chartData.map((metric, index) => (
               <div key={index} className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">
@@ -125,6 +166,25 @@ const ResultCard: React.FC<Props> = ({ result }) => {
                 </span>
               </div>
             ))}
+
+            {/* Divider */}
+            {additionalStats.length > 0 && (
+              <div className="border-t border-border/40 my-2 pt-2 space-y-2">
+                {additionalStats.map((stat, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between py-0.5"
+                  >
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {stat.label}:
+                    </span>
+                    <span className="text-sm font-semibold text-foreground/80">
+                      {stat.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right: Radar Chart */}
@@ -143,7 +203,7 @@ const ResultCard: React.FC<Props> = ({ result }) => {
                   tickFormatter={(value: number) => `${value}%`}
                 />
                 <Radar
-                  name="PNS/BAFS 290:2019 Metrics"
+                  name={result.modelVersion || "Rice Analysis Model"}
                   dataKey="value"
                   stroke="#10b981"
                   fill="#10b981"
@@ -174,11 +234,15 @@ const ResultCard: React.FC<Props> = ({ result }) => {
         {/* Standard Compliance */}
         <div className="mt-4 p-3 bg-muted/30 rounded-lg border border-border/40">
           <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-            Standard Compliance
+            Analysis Summary
           </p>
           <p className="text-xs text-foreground/80 leading-relaxed">
             {result.notes ||
-              "Classification based on PNS/BAFS 290:2019 milling standards. Analysis includes RGB + NIR imaging processed through CNN model."}
+              `Analyzed ${result.totalGrains || "N/A"} grains. ${
+                result.foreignObjects
+                  ? `Detected ${result.foreignObjects} foreign object(s).`
+                  : ""
+              } Classification based on PNS/BAFS 290:2019 milling standards.`}
           </p>
         </div>
 

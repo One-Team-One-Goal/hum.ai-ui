@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "./Button";
 import { GridLoader } from "react-spinners";
+import { analyzeImage } from "../lib/api";
 
 interface Props {
   preview?: string | null;
@@ -19,12 +20,17 @@ const UploadForm: React.FC<Props> = ({
   onAnalyze,
 }) => {
   const [fileName, setFileName] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [capturedDataUrl, setCapturedDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<string>("");
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function getDevices() {
@@ -111,6 +117,8 @@ const UploadForm: React.FC<Props> = ({
         ctx.drawImage(videoRef.current, 0, 0);
         const dataUrl = canvas.toDataURL("image/png");
         setFileName("camera-capture.png");
+        setCapturedDataUrl(dataUrl);
+        setSelectedFile(null);
         onPreview(dataUrl);
         // Stop the stream after capture
         if (stream) {
@@ -160,96 +168,113 @@ const UploadForm: React.FC<Props> = ({
     const input = e.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) {
       setFileName(null);
+      setSelectedFile(null);
+      setCapturedDataUrl(null);
       onPreview(null);
       return;
     }
     const file = input.files[0];
     setFileName(file.name);
+    setSelectedFile(file);
+    setCapturedDataUrl(null);
     const url = URL.createObjectURL(file);
     onPreview(url);
   }
 
-  function analyzeMock() {
-    setLoading(true);
-    setTimeout(() => {
-      // Generate realistic mock data based on PNS/BAFS-290:2019 standards
-      const scenarios = [
-        {
-          grade: "Premium",
-          headRicePercent: (97 + Math.random() * 2).toFixed(1), // 97-99%
-          brokenPercent: (0.5 + Math.random() * 1.5).toFixed(1), // 0.5-2%
-          chalkinessPercent: (0.5 + Math.random() * 1.5).toFixed(1), // 0.5-2%
-          damagedPercent: (0.1 + Math.random() * 0.4).toFixed(1), // 0.1-0.5%
-          discoloredPercent: (0.1 + Math.random() * 0.4).toFixed(1), // 0.1-0.5%
-          moisture: (13.5 + Math.random() * 0.5).toFixed(1), // 13.5-14%
-          confidence: (98 + Math.random() * 2).toFixed(1), // 98-100%
-          modelVersion: "CNN-NIR-v1.2.3",
-          notes:
-            "Premium grade rice meeting highest PNS/BAFS 290:2019 standards. RGB+NIR imaging confirms minimal defects and optimal grain integrity.",
-        },
-        {
-          grade: "Grade 1",
-          headRicePercent: (92 + Math.random() * 4).toFixed(1), // 92-96%
-          brokenPercent: (2 + Math.random() * 3).toFixed(1), // 2-5%
-          chalkinessPercent: (1 + Math.random() * 2).toFixed(1), // 1-3%
-          damagedPercent: (0.2 + Math.random() * 0.8).toFixed(1), // 0.2-1%
-          discoloredPercent: (0.2 + Math.random() * 0.8).toFixed(1), // 0.2-1%
-          moisture: (13.5 + Math.random() * 0.7).toFixed(1), // 13.5-14.2%
-          confidence: (95 + Math.random() * 3).toFixed(1), // 95-98%
-          modelVersion: "CNN-NIR-v1.2.3",
-          notes:
-            "Grade 1 classification per PNS/BAFS 290:2019. Acceptable grain quality with minor defects detected via NIR analysis.",
-        },
-        {
-          grade: "Grade 2",
-          headRicePercent: (85 + Math.random() * 7).toFixed(1), // 85-92%
-          brokenPercent: (5 + Math.random() * 5).toFixed(1), // 5-10%
-          chalkinessPercent: (2 + Math.random() * 4).toFixed(1), // 2-6%
-          damagedPercent: (0.5 + Math.random() * 1.5).toFixed(1), // 0.5-2%
-          discoloredPercent: (0.5 + Math.random() * 1.5).toFixed(1), // 0.5-2%
-          moisture: (13.5 + Math.random() * 1).toFixed(1), // 13.5-14.5%
-          confidence: (90 + Math.random() * 5).toFixed(1), // 90-95%
-          modelVersion: "CNN-NIR-v1.2.3",
-          notes:
-            "Grade 2 per PNS/BAFS 290:2019. Moderate defects identified. CNN model detected increased broken kernels and chalkiness.",
-        },
-        {
-          grade: "Substandard",
-          headRicePercent: (65 + Math.random() * 15).toFixed(1), // 65-80%
-          brokenPercent: (10 + Math.random() * 10).toFixed(1), // 10-20%
-          chalkinessPercent: (5 + Math.random() * 10).toFixed(1), // 5-15%
-          damagedPercent: (2 + Math.random() * 3).toFixed(1), // 2-5%
-          discoloredPercent: (2 + Math.random() * 3).toFixed(1), // 2-5%
-          moisture: (14 + Math.random() * 1.5).toFixed(1), // 14-15.5%
-          confidence: (80 + Math.random() * 10).toFixed(1), // 80-90%
-          modelVersion: "CNN-NIR-v1.2.3",
-          notes:
-            "Substandard classification - below PNS/BAFS 290:2019 minimum requirements. Significant defects detected via RGB+NIR imaging.",
-        },
-      ];
-
-      const selectedScenario =
-        scenarios[Math.floor(Math.random() * scenarios.length)];
-      const res = {
-        ...selectedScenario,
-        timestamp: new Date().toISOString(),
-      };
-
-      setLoading(false);
-      onAnalyze(res);
-    }, 1200);
+  function handleDroppedFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      setError("Please drop an image file");
+      return;
+    }
+    setFileName(file.name);
+    setSelectedFile(file);
+    setCapturedDataUrl(null);
+    setError(null);
+    const url = URL.createObjectURL(file);
+    onPreview(url);
   }
 
-  const canAnalyze = Boolean(preview || fileName) && !loading;
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set isDragging to false if we're leaving the drop zone entirely
+    if (
+      dropZoneRef.current &&
+      !dropZoneRef.current.contains(e.relatedTarget as Node)
+    ) {
+      setIsDragging(false);
+    }
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      handleDroppedFile(files[0]);
+    }
+  }
+
+  async function handleAnalyze() {
+    setLoading(true);
+    setError(null);
+
+    try {
+      let result;
+      if (capturedDataUrl) {
+        // Camera capture - send as data URL
+        result = await analyzeImage(
+          capturedDataUrl,
+          fileName || "camera-capture.png"
+        );
+      } else if (selectedFile) {
+        // File upload
+        result = await analyzeImage(selectedFile, fileName || "image.png");
+      } else {
+        throw new Error("No image selected");
+      }
+
+      // Add timestamp if not present
+      if (!result.timestamp) {
+        result.timestamp = new Date().toISOString();
+      }
+
+      onAnalyze(result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Analysis failed";
+      setError(message);
+      console.error("Analysis error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const canAnalyze =
+    Boolean((preview || fileName) && (selectedFile || capturedDataUrl)) &&
+    !loading;
 
   return (
     <div className="space-y-4">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          <strong>Error:</strong> {error}
+        </div>
+      )}
       {preview ? (
         <div className="bg-primary/10 border-2 border-primary/10 rounded-xl">
           <input
             id="file-upload"
             name="file-upload"
             type="file"
+            accept="image/*"
             className="sr-only"
             onInput={handleFile}
           />
@@ -320,6 +345,9 @@ const UploadForm: React.FC<Props> = ({
                 className="flex-1 bg-secondary border border-primary text-primary rounded-full text-xs"
                 onClick={() => {
                   setFileName(null);
+                  setSelectedFile(null);
+                  setCapturedDataUrl(null);
+                  setError(null);
                   onPreview(null);
                 }}
               >
@@ -328,7 +356,7 @@ const UploadForm: React.FC<Props> = ({
               <Button
                 variant="default"
                 className="flex-1 bg-primary border border-secondary text-secondary rounded-full text-xs"
-                onClick={analyzeMock}
+                onClick={handleAnalyze}
                 disabled={!canAnalyze}
               >
                 {loading ? "Analyzing..." : "ANALYZE"}
@@ -337,7 +365,17 @@ const UploadForm: React.FC<Props> = ({
           </div>
         </div>
       ) : (
-        <div className="bg-primary/10 border-2 border-primary/10 rounded-xl">
+        <div
+          ref={dropZoneRef}
+          className={`bg-primary/10 border-2 rounded-xl transition-colors ${
+            isDragging
+              ? "border-primary border-dashed bg-primary/20"
+              : "border-primary/10"
+          }`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
           <label
             htmlFor="file-upload"
             className="block text-sm font-medium text-slate-700 sr-only"
@@ -351,6 +389,7 @@ const UploadForm: React.FC<Props> = ({
                 id="file-upload"
                 name="file-upload"
                 type="file"
+                accept="image/*"
                 className="sr-only"
                 onInput={handleFile}
               />
@@ -434,7 +473,9 @@ const UploadForm: React.FC<Props> = ({
                       className="flex-1 flex flex-col cursor-pointer justify-between"
                     >
                       <div className="text-xs p-4 text-secondary/60">
-                        Image preview will show here
+                        {isDragging
+                          ? "Drop your image here..."
+                          : "Drag & drop an image here, or click to upload"}
                       </div>
 
                       <div className="flex flex-col justify-end">
@@ -467,16 +508,14 @@ const UploadForm: React.FC<Props> = ({
               <Button
                 variant="default"
                 className="flex-1 bg-secondary border border-primary text-primary rounded-full text-xs"
-                onClick={analyzeMock}
               >
-                <label htmlFor="file-upload">
-                  {loading ? "Uploading..." : "UPLOAD"}
-                </label>
+                <label htmlFor="file-upload">UPLOAD</label>
               </Button>
               <Button
                 variant="default"
                 className="flex-1 bg-primary border border-secondary text-secondary rounded-full text-xs"
-                onClick={analyzeMock}
+                onClick={handleAnalyze}
+                disabled={!canAnalyze}
               >
                 {loading ? "Analyzing..." : "ANALYZE"}
               </Button>

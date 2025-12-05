@@ -4,7 +4,7 @@ const Header: React.FC = () => {
   return (
     <header className="text-center">
       <p className="text-xs text-slate-400 font-medium mb-8 absolute top-6 left-64">
-        v.0.0.0
+        v.0.1.0
       </p>
       <h1 className="text-5xl md:text-5xl font-bold leading-tight mt-5">
         AI-Assisted Rice Grading
