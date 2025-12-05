@@ -48,67 +48,62 @@ const ResultCard: React.FC<Props> = ({ result }) => {
   }
 
   const gradeColorMap: Record<string, string> = {
-    Premium: "text-emerald-600",
-    "Grade 1": "text-blue-600",
-    "Grade 2": "text-amber-600",
-    Substandard: "text-rose-600",
+    PREMIUM: "text-emerald-600",
+    "GRADE 1": "text-blue-600",
+    "GRADE 2": "text-amber-600",
+    "GRADE 3": "text-orange-600",
+    "FAIL / BELOW GRADE 3": "text-rose-600",
   };
   const gradeColor = gradeColorMap[result.grade] || "text-foreground";
 
   const gradeBgMap: Record<string, string> = {
-    Premium: "bg-emerald-50 border-emerald-200",
-    "Grade 1": "bg-blue-50 border-blue-200",
-    "Grade 2": "bg-amber-50 border-amber-200",
-    Substandard: "bg-rose-50 border-rose-200",
+    PREMIUM: "bg-emerald-50 border-emerald-200",
+    "GRADE 1": "bg-blue-50 border-blue-200",
+    "GRADE 2": "bg-amber-50 border-amber-200",
+    "GRADE 3": "bg-orange-50 border-orange-200",
+    "FAIL / BELOW GRADE 3": "bg-rose-50 border-rose-200",
   };
   const gradeBg = gradeBgMap[result.grade] || "bg-muted border-border";
 
-  // Prepare chart data for recharts - adapt to backend response format
-  // Backend returns: headRicePercent, brokenPercent, discoloredPercent, foreignObjects, totalGrains, counts
+  // Color mapping for each grain category
+  const labelColors: Record<string, string> = {
+    whole: "#10b981",      // Emerald green - good quality
+    clean: "#22c55e",      // Green - good quality
+    broken: "#f59e0b",     // Amber - moderate issue
+    chalky: "#8b5cf6",     // Purple - quality issue
+    immature: "#06b6d4",   // Cyan - developmental issue
+    discolored: "#ef4444", // Red - damaged
+    foreignObject: "#64748b", // Slate gray - foreign matter
+  };
+
+  // Prepare chart data for recharts - using backend response format
+  // Backend returns: headRicePercent, brokenPercent, chalkyPercent, immaturePercent, discoloredPercent
   const chartData = [
     {
-      name: "Head Rice",
+      name: "Whole",
       value: parseFloat(result.headRicePercent || "0"),
-      fill: "#10b981",
+      fill: labelColors.whole,
     },
     {
       name: "Broken",
       value: parseFloat(result.brokenPercent || "0"),
-      fill: "#f59e0b",
+      fill: labelColors.broken,
+    },
+    {
+      name: "Chalky",
+      value: parseFloat(result.chalkyPercent || "0"),
+      fill: labelColors.chalky,
+    },
+    {
+      name: "Immature",
+      value: parseFloat(result.immaturePercent || "0"),
+      fill: labelColors.immature,
     },
     {
       name: "Discolored",
       value: parseFloat(result.discoloredPercent || "0"),
-      fill: "#a8a29e",
+      fill: labelColors.discolored,
     },
-    // Only show these if present (from mock data or future backend updates)
-    ...(result.chalkinessPercent
-      ? [
-          {
-            name: "Chalkiness",
-            value: parseFloat(result.chalkinessPercent || "0"),
-            fill: "#f43f5e",
-          },
-        ]
-      : []),
-    ...(result.damagedPercent
-      ? [
-          {
-            name: "Damaged",
-            value: parseFloat(result.damagedPercent || "0"),
-            fill: "#64748b",
-          },
-        ]
-      : []),
-    ...(result.moisture
-      ? [
-          {
-            name: "Moisture",
-            value: parseFloat(result.moisture || "0"),
-            fill: "#3b82f6",
-          },
-        ]
-      : []),
   ];
 
   // Calculate foreign object percentage if we have total grains
@@ -117,11 +112,12 @@ const ResultCard: React.FC<Props> = ({ result }) => {
       ? ((result.foreignObjects / result.totalGrains) * 100).toFixed(1)
       : null;
 
-  // Additional stats for display
+  // Additional stats for display including counts
   const additionalStats = [
     { label: "Total Grains", value: result.totalGrains },
-    { label: "Foreign Objects", value: result.foreignObjects },
-    ...(foreignPct ? [{ label: "Foreign %", value: `${foreignPct}%` }] : []),
+    { label: "Foreign Objects", value: result.foreignObjects, color: labelColors.foreignObject },
+    ...(result.counts?.clean ? [{ label: "Clean Grains", value: result.counts.clean, color: labelColors.clean }] : []),
+    ...(foreignPct ? [{ label: "Foreign %", value: `${foreignPct}%`, color: labelColors.foreignObject }] : []),
   ].filter((stat) => stat.value !== undefined && stat.value !== null);
 
   return (
@@ -184,7 +180,10 @@ const ResultCard: React.FC<Props> = ({ result }) => {
                     <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">
                       {stat.label}:
                     </span>
-                    <span className="text-xs sm:text-sm font-semibold text-foreground/80">
+                    <span 
+                      className="text-xs sm:text-sm font-semibold"
+                      style={{ color: stat.color || "inherit" }}
+                    >
                       {stat.value}
                     </span>
                   </div>
